@@ -1,12 +1,14 @@
 """Main application entry point."""
 
+import os
 from pathlib import Path
 from datetime import datetime
 
-from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, Form, Request
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from starlette.middleware.sessions import SessionMiddleware
 
 # Use an absolute import so the module works whether executed as a script or a
 # package. This avoids import errors when the code is relocated.
@@ -17,7 +19,22 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 DATA_DIR = BASE_DIR / "data"
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
+# Load variables from a .env file if it exists. This avoids adding an
+# additional dependency for a simple use case.
+env_file = BASE_DIR / ".env"
+if env_file.exists():
+    for line in env_file.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            key, value = line.split("=", 1)
+            os.environ.setdefault(key, value)
+
+USERNAME = os.getenv("APP_USERNAME", "")
+PASSWORD = os.getenv("APP_PASSWORD", "")
+SECRET_KEY = os.getenv("SECRET_KEY", "changeme")
+
 app = FastAPI()
+app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # Load route data once at startup. If the data directory is missing or empty,
@@ -28,14 +45,41 @@ except FileNotFoundError:
     route_geojson, route_meta = {}, {}
 
 
+def _authenticated(request: Request) -> bool:
+    return bool(request.session.get("authenticated"))
+
+
 @app.get("/")
-def index() -> FileResponse:
+def index(request: Request) -> FileResponse | RedirectResponse:
+    if not _authenticated(request):
+        return RedirectResponse("/login")
     return FileResponse(STATIC_DIR / "index.html")
 
 
 @app.get("/config")
-def config_page() -> FileResponse:
+def config_page(request: Request) -> FileResponse | RedirectResponse:
+    if not _authenticated(request):
+        return RedirectResponse("/login")
     return FileResponse(STATIC_DIR / "config.html")
+
+
+@app.get("/login")
+def login_page() -> FileResponse:
+    return FileResponse(STATIC_DIR / "login.html")
+
+
+@app.post("/login")
+def login(request: Request, username: str = Form(...), password: str = Form(...)) -> RedirectResponse:
+    if username == USERNAME and password == PASSWORD:
+        request.session["authenticated"] = True
+        return RedirectResponse("/", status_code=303)
+    return RedirectResponse("/login?error=1", status_code=303)
+
+
+@app.get("/logout")
+def logout(request: Request) -> RedirectResponse:
+    request.session.clear()
+    return RedirectResponse("/login", status_code=303)
 
 
 @app.get("/api/route")
