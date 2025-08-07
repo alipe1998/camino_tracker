@@ -10,6 +10,7 @@ let searchMarker;
 let cumulative = [];
 let coords = [];
 let totalLength = 0;
+let countdownTimer;
 
 Promise.all([fetch("/api/meta"), fetch("/api/route")])
   .then((responses) => Promise.all(responses.map((r) => r.json())))
@@ -17,6 +18,7 @@ Promise.all([fetch("/api/meta"), fetch("/api/route")])
     meta = m;
     routeData = r;
     addRoute();
+    setupCountdown();
     setupAnimation();
   });
 
@@ -38,7 +40,34 @@ function addRoute() {
 
 function setupAnimation() {
   updateMarker();
-  setInterval(updateMarker, 10000);
+  const start = Date.parse(meta.start_time);
+  const now = Date.now();
+  const delay = Math.max(start - now, 0);
+  setTimeout(() => {
+    updateMarker();
+    setInterval(updateMarker, 300000);
+  }, delay);
+}
+
+function setupCountdown() {
+  const el = document.getElementById("countdown");
+  const start = Date.parse(meta.start_time);
+  function update() {
+    const now = Date.now();
+    const diff = start - now;
+    if (diff <= 0) {
+      el.textContent = "";
+      clearInterval(countdownTimer);
+      return;
+    }
+    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const m = Math.floor((diff / (1000 * 60)) % 60);
+    const s = Math.floor((diff / 1000) % 60);
+    el.textContent = `Starts in ${d}d ${h}h ${m}m ${s}s`;
+  }
+  update();
+  countdownTimer = setInterval(update, 1000);
 }
 
 function updateMarker() {
