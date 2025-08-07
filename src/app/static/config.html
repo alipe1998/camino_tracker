@@ -37,7 +37,9 @@
             end_time: new Date(e).toISOString()
           })
         });
-        alert('Saved');
+        // Notify any open map pages to reload and show the new progress
+        localStorage.setItem('trackerConfigUpdated', Date.now().toString());
+        window.location.href = '/';
       }
       document.getElementById('saveBtn').addEventListener('click', save);
       load();
