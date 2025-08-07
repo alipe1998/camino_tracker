@@ -1,20 +1,29 @@
+"""Main application entry point."""
+
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from .route_utils import load_route
+# Use an absolute import so the module works whether executed as a script or a
+# package. This avoids import errors when the code is relocated.
+from app.route_utils import load_route
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+# Repository root (two levels above this file: src/app/main.py -> project root)
+BASE_DIR = Path(__file__).resolve().parents[2]
 DATA_DIR = BASE_DIR / "data"
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-# Load route data once at startup
-route_geojson, route_meta = load_route(DATA_DIR)
+# Load route data once at startup. If the data directory is missing or empty,
+# fall back to empty dictionaries so the application can still start.
+try:
+    route_geojson, route_meta = load_route(DATA_DIR)
+except FileNotFoundError:
+    route_geojson, route_meta = {}, {}
 
 
 @app.get("/")

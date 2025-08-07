@@ -13,3 +13,11 @@ dependencies = [
     "uvicorn[standard]",
     "geopy",
 ]
+
+[tool.setuptools]
+# Use the ``src`` directory for the project packages so that installation via
+# uv/setuptools picks up the application package correctly.
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

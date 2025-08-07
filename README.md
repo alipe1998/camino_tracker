@@ -9,8 +9,8 @@ Place the Camino route `.kml` files in the `data/` directory at the project root
 ## Running locally
 
 ```bash
-pip install -e .
-python -m app.main
+# Install dependencies and run the application using uv
+uv run python -m app.main
 ```
 
 Then open <http://localhost:8000> in your browser.
