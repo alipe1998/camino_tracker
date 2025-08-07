@@ -40,34 +40,23 @@ window.addEventListener("DOMContentLoaded", () => {
     })
     .catch((err) => console.error("Error fetching meta/route:", err));
 
-  // 4. Draw route, compute distances, enforce east→west ordering, and place initial marker
+  // 4. Draw route, compute distances in order from east→west, and place initial marker
   function addRoute() {
-    // draw the polyline
-    L.geoJSON(routeData, {
+    // draw the polyline and capture coordinates in draw order
+    const layer = L.geoJSON(routeData, {
       style: (f) => ({ color: f.properties.color, weight: 5 }),
     }).addTo(map);
 
-    // extract [lat, lng]
-    coords = routeData.features.flatMap((f) =>
-      f.geometry.coordinates.map((c) => [c[1], c[0]])
-    );
-    console.log("Raw coords:", coords);
+    coords = [];
+    layer.eachLayer((l) => {
+      coords.push(...l.getLatLngs().map((p) => [p.lat, p.lng]));
+    });
+    console.log("Route coords:", coords);
 
-    // find index of easternmost point
-    const eastIndex = coords.reduce(
-      (best, pt, i, arr) => (pt[1] > arr[best][1] ? i : best),
-      0
-    );
-    console.log("Easternmost at idx", eastIndex, ":", coords[eastIndex]);
-
-    // rebuild coords so we start at eastIndex and move backward (→west)
-    const ordered = [];
-    for (let i = 0; i < coords.length; i++) {
-      const idx = (eastIndex - i + coords.length) % coords.length;
-      ordered.push(coords[idx]);
+    // ensure east→west ordering (León east, Santiago west)
+    if (coords[0][1] < coords[coords.length - 1][1]) {
+      coords.reverse();
     }
-    coords = ordered;
-    console.log("Reordered coords (east→west): first 5:", coords.slice(0, 5));
 
     // build cumulative distances (meters)
     cumulative = [0];
