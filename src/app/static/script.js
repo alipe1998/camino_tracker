@@ -3,6 +3,13 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "&copy; OpenStreetMap contributors",
 }).addTo(map);
 
+// Reload the map when configuration changes so the tracker position updates
+window.addEventListener("storage", (e) => {
+  if (e.key === "trackerConfigUpdated") {
+    location.reload();
+  }
+});
+
 let routeData;
 let meta;
 let movingMarker;
@@ -29,13 +36,24 @@ function addRoute() {
   coords = routeData.features.flatMap((f) =>
     f.geometry.coordinates.map((c) => [c[1], c[0]])
   );
+  // Ensure the route starts at the easternmost point (León)
+  if (coords.length > 1 && coords[0][1] < coords[coords.length - 1][1]) {
+    coords.reverse();
+  }
   cumulative = [0];
   for (let i = 1; i < coords.length; i++) {
     const d = haversine(coords[i - 1], coords[i]);
     cumulative.push(cumulative[cumulative.length - 1] + d);
   }
   totalLength = cumulative[cumulative.length - 1];
-  movingMarker = L.marker(coords[0]).addTo(map);
+  // Use a large circle so the tracker point is clearly visible
+  movingMarker = L.circleMarker(coords[0], {
+    radius: 10,
+    color: "#ff0000",
+    weight: 2,
+    fillColor: "#ff0000",
+    fillOpacity: 1,
+  }).addTo(map);
 }
 
 function setupAnimation() {
