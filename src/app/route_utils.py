@@ -7,10 +7,10 @@ import xml.etree.ElementTree as ET
 
 from geopy.distance import geodesic
 
-# Time configuration
+# Default time configuration. These values are used when the application starts
+# but can be overridden at runtime via the configuration page.
 START_TIME = datetime(2024, 8, 10, tzinfo=timezone.utc)
 END_TIME = datetime(2024, 8, 20, tzinfo=timezone.utc)
-DAYS = (END_TIME - START_TIME).days
 
 # Colors for each day's segment
 COLORS = [
@@ -92,8 +92,21 @@ def build_geojson(segments: List[List[Tuple[float, float]]]) -> dict:
     return {"type": "FeatureCollection", "features": features}
 
 
-def load_route(data_dir: Path) -> tuple[dict, dict]:
-    """Load KML files, compute metadata and return GeoJSON and metadata."""
+def load_route(
+    data_dir: Path,
+    start_time: datetime | None = None,
+    end_time: datetime | None = None,
+) -> tuple[dict, dict]:
+    """Load KML files and build route data for the given time window.
+
+    If ``start_time`` or ``end_time`` are ``None`` the module level defaults
+    ``START_TIME`` and ``END_TIME`` are used.  This allows the application to
+    recompute route segments when the user adjusts the date range.
+    """
+
+    start_time = start_time or START_TIME
+    end_time = end_time or END_TIME
+
     files = sorted(data_dir.glob("*.kml"))
     if not files:
         raise FileNotFoundError("No KML files found in data directory")
@@ -103,19 +116,21 @@ def load_route(data_dir: Path) -> tuple[dict, dict]:
         coords.extend(parse_kml(file))
 
     total_distance_km = compute_total_distance(coords)
-    daily_distance = total_distance_km / DAYS
+
+    days = max((end_time - start_time).days, 1)
+    daily_distance = total_distance_km / days
     segments = split_into_segments(coords, daily_distance)
     geojson = build_geojson(segments)
 
-    duration_seconds = (END_TIME - START_TIME).total_seconds()
+    duration_seconds = max((end_time - start_time).total_seconds(), 1)
     speed_mps = total_distance_km * 1000 / duration_seconds
 
     meta = {
         "total_distance_km": total_distance_km,
         "daily_distance_km": daily_distance,
         "speed_mps": speed_mps,
-        "start_time": START_TIME.isoformat(),
-        "end_time": END_TIME.isoformat(),
-        "days": DAYS,
+        "start_time": start_time.isoformat(),
+        "end_time": end_time.isoformat(),
+        "days": days,
     }
     return geojson, meta
