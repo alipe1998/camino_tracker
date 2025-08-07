@@ -15,6 +15,20 @@ uv run python -m app.main
 
 Then open <http://localhost:8000> in your browser.
 
+### Testing the animation early
+
+To preview the marker's movement before the real event begins, supply a
+`begin` query parameter with an ISO timestamp when loading the page:
+
+```
+http://localhost:8000/?begin=2024-07-01T00:00:00Z
+```
+
+The countdown still references the official start date, but the marker's
+progress will be calculated from the overridden `begin` time. This makes
+it easy to verify that the route and animation behave correctly prior to
+the actual start.
+
 ## Docker
 
 A `Dockerfile` is provided for deployment to platforms such as Fly.io.
