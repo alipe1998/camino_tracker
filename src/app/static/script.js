@@ -71,11 +71,12 @@ window.addEventListener("DOMContentLoaded", () => {
     // place marker at the very first point (easternmost)
     if (movingMarker) map.removeLayer(movingMarker);
     movingMarker = L.circleMarker(coords[0], {
-      radius: 10,
-      color: "#ff0000",
-      weight: 2,
-      fillColor: "#ff0000",
-      fillOpacity: 1,
+      radius: 12,
+      color: "#00ffff",          // bright cyan outline
+      weight: 3,
+      fillColor: "#00ffff",      // same color fill
+      fillOpacity: 0.7,
+      className: "glow-marker",  // custom CSS for glow
     }).addTo(map);
     console.log("Marker anchored at start (east):", coords[0]);
   }
