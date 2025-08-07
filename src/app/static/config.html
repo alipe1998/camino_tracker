@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Configuration</title>
+  </head>
+  <body>
+    <h1>Configure Dates</h1>
+    <label>
+      Start time:
+      <input type="datetime-local" id="start" />
+    </label>
+    <br />
+    <label>
+      End time:
+      <input type="datetime-local" id="end" />
+    </label>
+    <br />
+    <button id="saveBtn">Save</button>
+    <script>
+      async function load() {
+        const res = await fetch('/api/meta');
+        const meta = await res.json();
+        const start = new Date(meta.start_time);
+        const end = new Date(meta.end_time);
+        document.getElementById('start').value = start.toISOString().slice(0,16);
+        document.getElementById('end').value = end.toISOString().slice(0,16);
+      }
+      async function save() {
+        const s = document.getElementById('start').value;
+        const e = document.getElementById('end').value;
+        await fetch('/api/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            start_time: new Date(s).toISOString(),
+            end_time: new Date(e).toISOString()
+          })
+        });
+        alert('Saved');
+      }
+      document.getElementById('saveBtn').addEventListener('click', save);
+      load();
+    </script>
+  </body>
+</html>
