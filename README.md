@@ -15,21 +15,6 @@ uv run python -m app.main
 
 Then open <http://localhost:8000> in your browser.
 
-### Authentication
-
-The application now exposes a simple sign‑in page. Set the desired
-credentials in a `.env` file at the project root:
-
-```
-APP_USERNAME=your_username
-APP_PASSWORD=your_password
-SECRET_KEY=change_me
-```
-
-Visit <http://localhost:8000/login> and sign in with the above username
-and password. Upon successful authentication you will be redirected to
-the main map page.
-
 ### Testing the animation early
 
 To preview the marker's movement before the real event begins, supply a
