@@ -23,6 +23,8 @@ window.addEventListener("DOMContentLoaded", () => {
   let cumulative = [];
   let totalLength = 0;
   let countdownTimer;
+  // optional override for animation start (e.g., testing)
+  let animationStart;
 
   // 3. Kick off fetching, then setup everything
   Promise.all([fetch("/api/meta"), fetch("/api/route")])
@@ -97,9 +99,14 @@ window.addEventListener("DOMContentLoaded", () => {
     function update() {
       const diff = start - Date.now();
       if (diff <= 0) {
-        el.textContent = "";
-        clearInterval(countdownTimer);
-        console.log("Countdown complete");
+        // Show elapsed time since official start so testing with a past
+        // date still renders a meaningful message.
+        const elapsed = Math.abs(diff);
+        const d = Math.floor(elapsed / (1000 * 60 * 60 * 24));
+        const h = Math.floor((elapsed / (1000 * 60 * 60)) % 24);
+        const m = Math.floor((elapsed / (1000 * 60)) % 60);
+        const s = Math.floor((elapsed / 1000) % 60);
+        el.textContent = `Started ${d}d ${h}h ${m}m ${s}s ago`;
         return;
       }
       const d = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -116,10 +123,18 @@ window.addEventListener("DOMContentLoaded", () => {
   // 6. Animate marker: initial + at start + every 5s
   function setupAnimation() {
     console.log("Setting up animation...");
+
+    // Allow an optional begin date to be supplied via query string for
+    // testing, e.g. /?begin=2024-07-01T00:00:00Z
+    const params = new URLSearchParams(window.location.search);
+    const override = params.get("begin");
+    animationStart = override
+      ? Date.parse(override)
+      : Date.parse(meta.start_time);
+
     updateMarker();
 
-    const start = Date.parse(meta.start_time);
-    const delay = Math.max(start - Date.now(), 0);
+    const delay = Math.max(animationStart - Date.now(), 0);
     console.log("Animation will start in (ms):", delay);
 
     setTimeout(() => {
@@ -137,7 +152,7 @@ window.addEventListener("DOMContentLoaded", () => {
     if (!movingMarker) return;
 
     const now = Date.now();
-    const start = Date.parse(meta.start_time);
+    const start = animationStart;
     const end = Date.parse(meta.end_time);
     const progress = Math.min(Math.max((now - start) / (end - start), 0), 1);
     const distance = progress * totalLength;
