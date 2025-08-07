@@ -60,17 +60,15 @@ def _parse_iso(value: str) -> datetime:
 
 @app.post("/api/config")
 def api_config(update: ConfigUpdate) -> dict:
-    """Update start and end times for the tracker."""
+    """Update start and end times for the tracker.
+
+    Recompute the route segmentation and metadata so that the map and
+    statistics reflect the new date range.
+    """
     start = _parse_iso(update.start_time)
     end = _parse_iso(update.end_time)
-    route_meta["start_time"] = start.isoformat()
-    route_meta["end_time"] = end.isoformat()
-    duration = (end - start).total_seconds() or 1
-    route_meta["days"] = max((end - start).days, 1)
-    route_meta["speed_mps"] = (
-        route_meta.get("total_distance_km", 0) * 1000 / duration
-    )
-    route_meta["daily_distance_km"] = route_meta.get("total_distance_km", 0) / route_meta["days"]
+    global route_geojson, route_meta
+    route_geojson, route_meta = load_route(DATA_DIR, start, end)
     return {"status": "ok"}
 
 
