@@ -9,6 +9,8 @@ wheels/
 # Virtual environments
 .venv
 
+.env
+
 # data folder - ignore actual route files but keep placeholder
 data/*
 !data/.gitkeep
