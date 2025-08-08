@@ -9,8 +9,8 @@ from geopy.distance import geodesic
 
 # Default time configuration. These values are used when the application starts
 # but can be overridden at runtime via the configuration page.
-START_TIME = datetime(2024, 8, 10, tzinfo=timezone.utc)
-END_TIME = datetime(2024, 8, 20, tzinfo=timezone.utc)
+START_TIME = datetime(2025, 8, 10, tzinfo=timezone.utc)
+END_TIME = datetime(2025, 8, 20, tzinfo=timezone.utc)
 
 # Colors for each day's segment
 COLORS = [

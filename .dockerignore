@@ -1,0 +1,20 @@
+# flyctl launch added from .gitignore
+# Python-generated files
+**/__pycache__
+**/*.py[oc]
+**/build
+**/dist
+**/wheels
+**/*.egg-info
+
+# Virtual environments
+**/.venv
+
+**/.env
+
+# data folder - ignore actual route files but keep placeholder
+
+
+# flyctl launch added from .venv/.gitignore
+.venv/**/*
+fly.toml

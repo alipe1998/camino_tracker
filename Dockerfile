@@ -17,4 +17,4 @@ EXPOSE 8000
 
 # 6) Launch your app via uv:
 #    adjust the command to whatever your entry point is
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
